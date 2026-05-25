@@ -31,6 +31,7 @@ defined there. Quick reference:
 | Adapter | A concrete FolderIndex implementation (FrontmatterAdapter or DataviewAdapter) |
 | DatabaseView | The Obsidian ItemView that renders a FolderIndex as a table |
 | DbConfig | Per-folder config in `.obsidian-db.json` — formula columns + column order |
+| ColumnResult | Return type of FormulaEngine.evaluate() — `aggregate` (one value) or `per-row` (one per Row) |
 
 ---
 
@@ -48,13 +49,14 @@ Read `docs/adr/` before re-litigating these. Summary:
 ## Development commands
 
 ```bash
-npm run dev      # esbuild watch mode - outputs main.js
-npm run build    # production build (no sourcemap)
-npm test         # vitest run (all tests, no watch)
-npm run test:watch  # vitest watch
+npm run dev        # esbuild watch mode - outputs main.js
+npm run build      # production build (no sourcemap)
+npm run typecheck  # tsc --noEmit (type errors esbuild misses)
+npm test           # vitest run (all tests, no watch)
+npm run test:watch # vitest watch
 ```
 
-All tests must be GREEN before any commit. Never commit with failing tests.
+All tests must be GREEN and typecheck must pass before any commit.
 
 ---
 
@@ -63,14 +65,40 @@ All tests must be GREEN before any commit. Never commit with failing tests.
 | Phase | Status | Description |
 |-------|--------|-------------|
 | 0 — Repo setup | DONE | CONTEXT.md, ADRs, types, schemas, config files |
-| 1 — FolderIndex TDD | DONE | FrontmatterAdapter, 10 tests GREEN |
-| 2 — FormulaEngine TDD | pending | =SUM, =COUNT, =AVG, =IF, error handling |
+| 1 — FolderIndex TDD | DONE | FrontmatterAdapter (10 tests GREEN) + DataviewAdapter stub |
+| 2 — FormulaEngine TDD | pending | =SUM, =COUNT, =AVG, =IF (per-row + aggregate), ColumnResult |
 | 3 — Table View | pending | DatabaseView, DatabaseTable, CellEditor, WikilinkCell |
 | 4 — Formula Columns | pending | parseFormula, FormulaCell, persist to .obsidian-db.json |
 | 5 — CSV Import | pending | CsvImporter TDD, ImportModal |
-| 6 — Settings + Release | pending | SettingsTab, README, BRAT, community plugins PR |
+| 6 — Settings + Release | pending | DataviewAdapter full impl, SettingsTab, README, BRAT |
 
 Start Phase 2 unless the user says otherwise.
+
+---
+
+## Formula design (locked — read before Phase 2)
+
+FormulaColumns support two modes. The parser determines the mode from the function name.
+
+**Aggregate** (SUM, AVG, COUNT): one value computed across all Rows, displayed identically
+in every cell of the column.
+```
+=SUM(price)            → sum of all price values across all Rows
+=AVG(rating)           → mean of all rating values
+=COUNT(status)         → count of Rows where status key exists
+=COUNT(status="done")  → count of Rows where status equals "done"
+```
+
+**Per-row** (IF): evaluated independently for each Row using that Row's own frontmatter.
+```
+=IF(score>80,"pass","fail")  → each Row shows "pass" or "fail" based on its own score
+```
+
+`IFormulaEngine.evaluate()` returns `ColumnResult`:
+- `{ kind: 'aggregate', value: unknown }` — same value for all cells
+- `{ kind: 'per-row', values: unknown[] }` — `values[i]` pairs with `rows[i]`
+
+Invalid formulas return `{ kind: 'aggregate', value: '#ERROR' }` — never throw.
 
 ---
 
@@ -89,7 +117,7 @@ main  (protected — always releasable)
 **Required for every change:**
 1. `git checkout -b feat/<name>` from latest `main`
 2. Work in small, focused commits
-3. `npm test` passes GREEN before pushing
+3. `npm test` + `npm run typecheck` pass before pushing
 4. Open a PR — do not merge locally to main
 5. Squash merge via PR, delete the branch
 
@@ -154,24 +182,41 @@ Test helpers live in `src/__tests__/helpers/`. Use them, don't duplicate.
 
 ## Engineering principles (always-on)
 
-### From A Philosophy of Software Design (Ousterhout)
+### A Philosophy of Software Design (Ousterhout) — primary bias
 
-- Optimize for lower cognitive load, not shorter files or fewer lines.
-- Prefer deep modules — small interface, large implementation (FolderIndex is the model).
-- Hide volatile decisions behind the right boundary (Adapter hides MetadataCache vs Dataview).
-- If a change spreads widely, fix ownership instead of adding special cases.
-- When naming is hard or comments get long, treat it as a design signal.
+Use reduced complexity as the primary success metric. Prefer the design that lowers
+cognitive load, change amplification, hidden dependencies, and the number of facts a
+reader must hold at once.
 
-### From Clean Code (Martin)
+- Prefer deep modules: small, semantic interfaces that hide meaningful internal complexity.
+  Reject pass-through services, thin wrappers, and tiny split-outs that add names without
+  reducing reader burden. FolderIndex is the reference implementation of this pattern.
+- Design interfaces around what callers need to know, not how the implementation works.
+  Avoid fragile staging, setup sequences, mode flags, and arguments that expose internal choices.
+- Hide volatile decisions inside the module that owns the knowledge. Adapters hide whether
+  MetadataCache or Dataview is in use. FormulaEngine hides whether formulajs or custom
+  logic runs the computation.
+- Pull complexity downward. Prefer a slightly more complex implementation if it gives callers
+  a simpler public contract.
+- Treat names, consistency, and obviousness as design information. When naming is hard or
+  comments get long, treat it as a design signal — the abstraction boundary is wrong.
+- Use tests to protect behavior through public contracts. Do not let test convenience force
+  shallow or leaky interfaces.
+
+Trigger: when adding any module, layer, helper, or argument, prove it hides more complexity
+than it adds. When a change spreads across files, look for missing information hiding.
+
+### Clean Code (Martin)
 
 - Preserve behavior, write for the next reader, leave touched code cleaner within scope.
 - Split boolean flags, mixed abstraction levels, and hidden side effects out of functions.
 - Separate commands from queries.
 - Use comments only for rationale, never to explain confusing code.
 
-### From Clean Architecture (Martin)
+### Clean Architecture (Martin)
 
-- Source dependencies point inward. FolderIndex (domain) must not import Obsidian framework types beyond what the interface needs.
+- Source dependencies point inward. FolderIndex (domain) must not import Obsidian framework
+  types beyond what the interface requires.
 - Adapters translate — they do not own business rules.
 - Test policy (FormulaEngine, CsvImporter) without real Obsidian dependencies.
 
@@ -181,7 +226,7 @@ Test helpers live in `src/__tests__/helpers/`. Use them, don't duplicate.
 
 - Do not commit directly to `main`
 - Do not add Claude, Copilot, or any AI as commit co-author
-- Do not use em dashes (—) anywhere in code, comments, or docs — use hyphens (-)
+- Do not use em dashes (--) anywhere in code, comments, or docs — use hyphens (-)
 - Do not add features outside the current phase scope
 - Do not write to `.md` files outside the test environment (all row data belongs to the user)
 - Do not use `z.parse()` — always `z.safeParse()` at external boundaries

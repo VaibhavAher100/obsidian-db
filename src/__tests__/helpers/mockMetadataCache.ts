@@ -5,7 +5,10 @@ type FrontmatterMap = Record<string, Record<string, unknown>>;
 export function createMockMetadataCache(frontmatterByPath: FrontmatterMap) {
   const listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
 
-  const cache: Pick<MetadataCache, 'getFileCache' | 'on' | 'off'> = {
+  // No explicit Pick<MetadataCache> annotation — Obsidian's overloaded on() signature
+  // conflicts with our generic (...args: unknown[]) handler. FrontmatterAdapter uses
+  // a narrow CacheDep interface that this inferred type satisfies.
+  const cache = {
     getFileCache: (file: TFile) => {
       const fm = frontmatterByPath[file.path];
       if (!fm) return null;

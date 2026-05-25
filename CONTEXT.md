@@ -29,8 +29,11 @@ Avoid: computed column, derived column, calculated column
 
 **FolderIndex**
 The deep-module interface that provides a stream of Rows for a given folder path. Hides all
-MetadataCache and Dataview implementation details from callers. Exposes exactly two read
-operations: `getRows()` and `onRowChange()`.
+MetadataCache and Dataview implementation details from callers. Four methods:
+- `getRows()` — snapshot of current Rows
+- `onRowChange(cb)` — subscribe to changes, returns an unsubscribe function
+- `updateCell(file, key, value)` — write one frontmatter key back to disk
+- `destroy()` — remove all registered listeners (call in ItemView.onClose)
 Avoid: data source, provider, repository
 
 **Adapter**

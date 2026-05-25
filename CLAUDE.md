@@ -1,7 +1,8 @@
 # CLAUDE.md
 
-Read `AGENTS.md` first — it is the canonical ruleset for all agents in this repo.
-This file adds Claude Code-specific guidance only.
+@AGENTS.md
+
+## Claude Code-specific notes
 
 ---
 
