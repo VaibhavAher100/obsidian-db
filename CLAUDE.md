@@ -13,17 +13,11 @@
 - Use the `gh` CLI for all GitHub operations (PRs, issues, releases)
 - Never push directly to `main` — always open a PR from a feature branch
 
-## Skill usage
+## Development workflow
 
-Use these skills when they apply:
-
-| Task | Skill |
-|------|-------|
-| TDD cycles | `mattpocock-skills -> tdd` |
-| Architecture review | `mattpocock-skills -> improve-codebase-architecture` |
-| Git commits | `git-commit` |
-| GitHub operations | `gh-cli` |
-| Before each phase | `superpowers:brainstorming` |
+- TDD: one test -> minimal implementation -> repeat. Never write all tests first.
+- Git commits: conventional commit format (see AGENTS.md). `npm test` + `npm run typecheck` must pass first.
+- GitHub operations: use `gh` CLI for PRs, issues, releases.
 
 ## Repository layout
 

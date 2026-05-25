@@ -1,6 +1,6 @@
 {
   "name": "obsidian-db",
-  "version": "0.1.0",
+  "version": "0.0.1-dev",
   "description": "Turn any folder into a live database table inside Obsidian.",
   "main": "main.js",
   "scripts": {
