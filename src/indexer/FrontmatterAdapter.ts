@@ -3,8 +3,15 @@ import type { FolderIndex, Row, Unsubscribe } from '../types';
 import { RowFrontmatterSchema } from '../schemas';
 
 type VaultDep = Pick<Vault, 'getMarkdownFiles'>;
-type CacheDep = Pick<MetadataCache, 'getFileCache' | 'on' | 'off'>;
 type FileManagerDep = Pick<FileManager, 'processFrontMatter'>;
+
+// Narrow interface so tests don't need to satisfy Obsidian's overloaded on() signatures.
+// The real MetadataCache satisfies this structurally at runtime.
+interface CacheDep {
+  getFileCache: MetadataCache['getFileCache'];
+  on(event: string, cb: (...args: unknown[]) => void): unknown;
+  off(event: string, cb: (...args: unknown[]) => void): void;
+}
 
 type Handler = (...args: unknown[]) => void;
 

@@ -38,8 +38,14 @@ export interface FolderIndex {
 
 // FormulaEngine - injected as a dependency, never created internally by callers
 
+// Aggregate: one value for the whole column (SUM, AVG, COUNT).
+// Per-row: one value per row (IF, etc.) — values[i] matches rows[i].
+export type ColumnResult =
+  | { kind: 'aggregate'; value: unknown }
+  | { kind: 'per-row'; values: unknown[] };
+
 export interface IFormulaEngine {
-  evaluate(formula: string, rows: Row[]): unknown;
+  evaluate(formula: string, rows: Row[]): ColumnResult;
 }
 
 // DbConfig - shape of .obsidian-db.json
