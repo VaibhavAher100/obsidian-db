@@ -2,16 +2,10 @@ import type { MetadataCache, TFile } from 'obsidian';
 
 type FrontmatterMap = Record<string, Record<string, unknown>>;
 
-// Minimal MetadataCache stub for tests.
-// Pass a map of { [filePath]: frontmatter } to seed the cache.
-
-export function createMockMetadataCache(frontmatterByPath: FrontmatterMap): Pick<
-  MetadataCache,
-  'getFileCache' | 'on' | 'off'
-> {
+export function createMockMetadataCache(frontmatterByPath: FrontmatterMap) {
   const listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
 
-  return {
+  const cache: Pick<MetadataCache, 'getFileCache' | 'on' | 'off'> = {
     getFileCache: (file: TFile) => {
       const fm = frontmatterByPath[file.path];
       if (!fm) return null;
@@ -26,4 +20,10 @@ export function createMockMetadataCache(frontmatterByPath: FrontmatterMap): Pick
       listeners.get(_event)?.delete(cb);
     },
   };
+
+  const trigger = (event: string, ...args: unknown[]) => {
+    listeners.get(event)?.forEach(cb => cb(...args));
+  };
+
+  return { cache, trigger };
 }
