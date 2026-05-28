@@ -8,6 +8,7 @@ import {
 import type { TFile } from 'obsidian';
 import type { Row, Column, IFormulaEngine, ColumnResult } from '../types';
 import { CellEditor } from './CellEditor';
+import { FormulaCell } from './FormulaCell';
 import { WikilinkCell } from './WikilinkCell';
 
 type TableRow = Row & { _computed: Record<string, unknown> };
@@ -73,11 +74,11 @@ export function DatabaseTable({ rows, columns, engine, onUpdate }: Props) {
         );
       }
 
-      const handleClick = col.kind === 'data'
-        ? () => setEditing({ rowIdx, colKey: col.key })
-        : undefined;
+      if (col.kind === 'formula') {
+        return <FormulaCell value={value} isError={value === '#ERROR'} />;
+      }
 
-      return <span onClick={handleClick}>{String(value ?? '')}</span>;
+      return <span onClick={() => setEditing({ rowIdx, colKey: col.key })}>{String(value ?? '')}</span>;
     },
   }));
 
