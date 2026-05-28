@@ -1,6 +1,6 @@
 # ObsidianDB
 
-Turn any folder into a live database table inside Obsidian.
+Turn any folder into a live, sortable database table inside Obsidian.
 
 > DB Folder was archived in July 2025. ObsidianDB picks up where it left off - with formula
 > columns, CSV import, and a codebase built to last.
@@ -8,6 +8,7 @@ Turn any folder into a live database table inside Obsidian.
 ## Features (v0.1)
 
 - **Folder to table** - any folder of `.md` files becomes a live table based on YAML frontmatter
+- **Column sorting** - click any column header to sort ascending/descending
 - **Inline editing** - click any cell to edit; changes write back to the note's frontmatter
 - **Formula columns** - add computed columns using `=SUM(price)`, `=COUNT(status="done")`,
   `=AVG(rating)`, `=IF(score>80,"pass","fail")`
