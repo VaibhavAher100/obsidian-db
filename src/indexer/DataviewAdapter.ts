@@ -1,4 +1,5 @@
-import type { App, FileManager, MetadataCache, TFile, Vault } from 'obsidian';
+import { TFile } from 'obsidian';
+import type { App, FileManager, MetadataCache, Vault } from 'obsidian';
 import type { FolderIndex, Row, Unsubscribe } from '../types';
 import { FrontmatterAdapter } from './FrontmatterAdapter';
 import { RowFrontmatterSchema } from '../schemas';
@@ -54,7 +55,7 @@ export class DataviewAdapter implements FolderIndex {
       const pages = this.dvApi.pages(`"${this.folderPath}"`);
       return pages.values.flatMap(page => {
         const tfile = this.app.vault.getAbstractFileByPath(page.file.path);
-        if (!tfile || !('stat' in (tfile as object))) return [];
+        if (!tfile || !(tfile instanceof TFile)) return []; // Dataview may briefly hold a path the vault has already removed
         const { file: _file, ...fm } = page;
         const result = RowFrontmatterSchema.safeParse(fm);
         return [{ file: tfile as TFile, frontmatter: result.success ? result.data : {} }];

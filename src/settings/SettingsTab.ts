@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import type ObsidianDBPlugin from '../main';
 
 export class SettingsTab extends PluginSettingTab {
@@ -19,6 +19,7 @@ export class SettingsTab extends PluginSettingTab {
           .onChange(async value => {
             this.plugin.settings.useDataviewIfAvailable = value;
             await this.plugin.saveSettings();
+            new Notice('Reopen database tabs for this change to take effect.');
           }),
       );
 
