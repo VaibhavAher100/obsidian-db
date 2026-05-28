@@ -11,14 +11,26 @@ import { DatabaseTable } from './DatabaseTable';
 
 export const VIEW_TYPE_DATABASE = 'obsidian-db-view';
 
+function inferType(value: unknown): DataColumn['type'] {
+  if (typeof value === 'boolean') return 'boolean';
+  if (typeof value === 'number') return 'number';
+  if (typeof value === 'string') {
+    if (/^\[\[[^\]]+\]\]$/.test(value)) return 'wikilink';
+    if (/^\d{4}-\d{2}-\d{2}/.test(value)) return 'date';
+  }
+  return 'text';
+}
+
 function deriveColumns(rows: Row[]): DataColumn[] {
-  const keys = new Set<string>();
+  const seen = new Map<string, DataColumn['type']>();
   for (const row of rows) {
-    for (const key of Object.keys(row.frontmatter)) {
-      keys.add(key);
+    for (const [key, value] of Object.entries(row.frontmatter)) {
+      if (!seen.has(key)) {
+        seen.set(key, value != null ? inferType(value) : 'text');
+      }
     }
   }
-  return [...keys].map(key => ({ kind: 'data', key, label: key, type: 'text' }));
+  return [...seen.entries()].map(([key, type]) => ({ kind: 'data', key, label: key, type }));
 }
 
 export class DatabaseView extends ItemView {
