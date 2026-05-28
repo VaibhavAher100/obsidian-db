@@ -1,8 +1,10 @@
 import { Plugin } from 'obsidian';
 import type { PluginSettings } from './types';
 import { DEFAULT_SETTINGS } from './types';
+import { PluginSettingsSchema } from './schemas';
 import { DatabaseView, VIEW_TYPE_DATABASE } from './view/DatabaseView';
 import { ImportModal } from './importer/ImportModal';
+import { SettingsTab } from './settings/SettingsTab';
 
 export default class ObsidianDBPlugin extends Plugin {
   settings: PluginSettings = DEFAULT_SETTINGS;
@@ -15,6 +17,8 @@ export default class ObsidianDBPlugin extends Plugin {
       VIEW_TYPE_DATABASE,
       leaf => new DatabaseView(leaf, this, this.pendingFolderPath),
     );
+
+    this.addSettingTab(new SettingsTab(this.app, this));
 
     this.addCommand({
       id: 'open-as-database',
@@ -46,7 +50,9 @@ export default class ObsidianDBPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as PluginSettings;
+    const raw = (await this.loadData()) ?? {};
+    const parsed = PluginSettingsSchema.safeParse({ ...DEFAULT_SETTINGS, ...(raw as object) });
+    this.settings = parsed.success ? parsed.data : { ...DEFAULT_SETTINGS };
   }
 
   async saveSettings(): Promise<void> {

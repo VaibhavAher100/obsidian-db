@@ -3,9 +3,10 @@ import { ItemView, type WorkspaceLeaf } from 'obsidian';
 import { createRoot, type Root } from 'react-dom/client';
 import type ObsidianDBPlugin from '../main';
 import { DbConfigManager } from '../config/DbConfigManager';
+import { DataviewAdapter } from '../indexer/DataviewAdapter';
 import { FrontmatterAdapter } from '../indexer/FrontmatterAdapter';
 import { FormulaEngine } from '../formula/FormulaEngine';
-import type { Row, Unsubscribe, DataColumn, DbConfig } from '../types';
+import type { Row, Unsubscribe, DataColumn, DbConfig, FolderIndex } from '../types';
 import { DatabaseTable } from './DatabaseTable';
 
 export const VIEW_TYPE_DATABASE = 'obsidian-db-view';
@@ -24,7 +25,7 @@ export class DatabaseView extends ItemView {
   private root: Root | null = null;
   private rows: Row[] = [];
   private unsubscribe: Unsubscribe | null = null;
-  private folderIndex: FrontmatterAdapter | null = null;
+  private folderIndex: FolderIndex | null = null;
   private dbConfigManager: DbConfigManager | null = null;
   private dbConfig: DbConfig | null = null;
   private readonly engine = new FormulaEngine();
@@ -47,7 +48,10 @@ export class DatabaseView extends ItemView {
 
   override async onOpen(): Promise<void> {
     const { vault, metadataCache, fileManager } = this.app;
-    this.folderIndex = new FrontmatterAdapter(vault, metadataCache, fileManager, this.folderPath);
+    const useDataview = this.plugin.settings.useDataviewIfAvailable;
+    this.folderIndex = useDataview
+      ? new DataviewAdapter(this.app, vault, metadataCache, fileManager, this.folderPath)
+      : new FrontmatterAdapter(vault, metadataCache, fileManager, this.folderPath);
     this.rows = this.folderIndex.getRows();
 
     this.dbConfigManager = new DbConfigManager(vault.adapter, this.folderPath);
