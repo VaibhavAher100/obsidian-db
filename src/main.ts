@@ -2,6 +2,7 @@ import { Plugin } from 'obsidian';
 import type { PluginSettings } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { DatabaseView, VIEW_TYPE_DATABASE } from './view/DatabaseView';
+import { ImportModal } from './importer/ImportModal';
 
 export default class ObsidianDBPlugin extends Plugin {
   settings: PluginSettings = DEFAULT_SETTINGS;
@@ -19,6 +20,16 @@ export default class ObsidianDBPlugin extends Plugin {
       id: 'open-as-database',
       name: 'Open folder as database',
       callback: () => { void this.openActiveFolderAsDatabase(); },
+    });
+
+    this.addCommand({
+      id: 'import-csv',
+      name: 'Import CSV into folder',
+      callback: () => {
+        const folder = this.app.workspace.getActiveFile()?.parent;
+        if (!folder) return;
+        new ImportModal(this.app, this, folder.path).open();
+      },
     });
   }
 
