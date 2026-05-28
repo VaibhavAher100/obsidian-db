@@ -2,9 +2,10 @@ import React from 'react';
 import { ItemView, type WorkspaceLeaf } from 'obsidian';
 import { createRoot, type Root } from 'react-dom/client';
 import type ObsidianDBPlugin from '../main';
+import { DbConfigManager } from '../config/DbConfigManager';
 import { FrontmatterAdapter } from '../indexer/FrontmatterAdapter';
 import { FormulaEngine } from '../formula/FormulaEngine';
-import type { Row, Unsubscribe, DataColumn } from '../types';
+import type { Row, Unsubscribe, DataColumn, DbConfig } from '../types';
 import { DatabaseTable } from './DatabaseTable';
 
 export const VIEW_TYPE_DATABASE = 'obsidian-db-view';
@@ -24,6 +25,8 @@ export class DatabaseView extends ItemView {
   private rows: Row[] = [];
   private unsubscribe: Unsubscribe | null = null;
   private folderIndex: FrontmatterAdapter | null = null;
+  private dbConfigManager: DbConfigManager | null = null;
+  private dbConfig: DbConfig | null = null;
   private readonly engine = new FormulaEngine();
 
   constructor(
@@ -47,6 +50,9 @@ export class DatabaseView extends ItemView {
     this.folderIndex = new FrontmatterAdapter(vault, metadataCache, fileManager, this.folderPath);
     this.rows = this.folderIndex.getRows();
 
+    this.dbConfigManager = new DbConfigManager(vault.adapter, this.folderPath);
+    this.dbConfig = await this.dbConfigManager.load();
+
     this.unsubscribe = this.folderIndex.onRowChange(rows => {
       this.rows = rows;
       this.renderTable();
@@ -65,12 +71,16 @@ export class DatabaseView extends ItemView {
     this.unsubscribe = null;
     this.folderIndex?.destroy();
     this.folderIndex = null;
+    this.dbConfigManager = null;
+    this.dbConfig = null;
     return Promise.resolve();
   }
 
   private renderTable(): void {
     if (!this.root || !this.folderIndex) return;
-    const columns = deriveColumns(this.rows);
+    const dataColumns = deriveColumns(this.rows);
+    const formulaColumns = this.dbConfig?.formulaColumns ?? [];
+    const columns = [...dataColumns, ...formulaColumns];
     this.root.render(
       React.createElement(DatabaseTable, {
         rows: this.rows,
