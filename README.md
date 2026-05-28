@@ -7,13 +7,12 @@ Turn any folder into a live database table inside Obsidian.
 
 ## Features (v0.1)
 
-- **Folder to table** - any folder of `.md` files becomes a sortable, filterable table
-  based on YAML frontmatter
+- **Folder to table** - any folder of `.md` files becomes a live table based on YAML frontmatter
 - **Inline editing** - click any cell to edit; changes write back to the note's frontmatter
 - **Formula columns** - add computed columns using `=SUM(price)`, `=COUNT(status="done")`,
   `=AVG(rating)`, `=IF(score>80,"pass","fail")`
 - **CSV import** - import a CSV file and each row becomes a `.md` file with frontmatter
-- **Wikilinks** - `[[Note]]` values in cells render as clickable links
+- **Wikilinks** - `[[Note]]` values in cells render as clickable links that open the target note
 - **Theme-native** - follows your Obsidian theme automatically, light and dark
 
 ## Install

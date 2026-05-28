@@ -33,31 +33,53 @@ export class ImportModal extends Modal {
     this.contentEl.empty();
   }
 
+  private sanitizeSlug(raw: string): string {
+    return raw
+      .replace(/[/\\]/g, '-')
+      .replace(/\.\./g, '-')
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase()
+      .replace(/^-+|-+$/g, '') || 'row';
+  }
+
   private async runImport(file: File): Promise<void> {
     try {
       const text = await file.text();
       const { rows, headers } = new CsvImporter().parse(text);
       const firstHeader = headers[0] ?? '';
+
+      // Build all slugs and preflight paths before creating anything
       const seen = new Set<string>();
-      let created = 0;
+      const plan: { row: Record<string, string>; filePath: string }[] = [];
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i]!;
         let slug = firstHeader && row[firstHeader]
-          ? row[firstHeader]!.replace(/\s+/g, '-').toLowerCase()
+          ? this.sanitizeSlug(row[firstHeader]!)
           : `row-${i}`;
-        if (seen.has(slug)) {
-          slug = `${slug}-${i}`;
-        }
+        if (seen.has(slug)) slug = `${slug}-${i}`;
         seen.add(slug);
 
-        const fileName = `${slug}.md`;
-        const filePath = this.folderPath ? `${this.folderPath}/${fileName}` : fileName;
+        const filePath = this.folderPath
+          ? `${this.folderPath}/${slug}.md`
+          : `${slug}.md`;
 
-        const frontmatterLines = headers.map(h => `${h}: ${row[h] ?? ''}`).join('\n');
-        const content = `---\n${frontmatterLines}\n---\n`;
+        if (this.app.vault.getAbstractFileByPath(filePath)) {
+          throw new Error(`File already exists: ${filePath}`);
+        }
+        plan.push({ row, filePath });
+      }
 
-        await this.app.vault.create(filePath, content);
+      // All paths clear — create files and populate frontmatter safely
+      let created = 0;
+      for (const { row, filePath } of plan) {
+        const noteFile = await this.app.vault.create(filePath, '');
+        await this.app.fileManager.processFrontMatter(noteFile, fm => {
+          for (const h of headers) {
+            fm[h] = row[h] ?? '';
+          }
+        });
         created++;
       }
 

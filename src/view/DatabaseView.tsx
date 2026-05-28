@@ -1,5 +1,5 @@
 import React from 'react';
-import { ItemView, type WorkspaceLeaf } from 'obsidian';
+import { ItemView, type WorkspaceLeaf, type ViewStateResult } from 'obsidian';
 import { createRoot, type Root } from 'react-dom/client';
 import type ObsidianDBPlugin from '../main';
 import { DbConfigManager } from '../config/DbConfigManager';
@@ -29,11 +29,11 @@ export class DatabaseView extends ItemView {
   private dbConfigManager: DbConfigManager | null = null;
   private dbConfig: DbConfig | null = null;
   private readonly engine = new FormulaEngine();
+  private folderPath = '';
 
   constructor(
     leaf: WorkspaceLeaf,
     private readonly plugin: ObsidianDBPlugin,
-    readonly folderPath: string,
   ) {
     super(leaf);
   }
@@ -43,10 +43,46 @@ export class DatabaseView extends ItemView {
   }
 
   getDisplayText(): string {
-    return `DB: ${this.folderPath}`;
+    return this.folderPath ? `DB: ${this.folderPath}` : 'ObsidianDB';
+  }
+
+  override getState(): Record<string, unknown> {
+    return { folderPath: this.folderPath };
+  }
+
+  override async setState(state: Record<string, unknown>, result: ViewStateResult): Promise<void> {
+    if (typeof state['folderPath'] === 'string') {
+      this.folderPath = state['folderPath'];
+    }
+    await super.setState(state, result);
+    await this.initData();
   }
 
   override async onOpen(): Promise<void> {
+    const container = this.containerEl.children[1];
+    if (!container) return;
+    this.root = createRoot(container as HTMLElement);
+  }
+
+  override onClose(): Promise<void> {
+    this.root?.unmount();
+    this.root = null;
+    this.unsubscribe?.();
+    this.unsubscribe = null;
+    this.folderIndex?.destroy();
+    this.folderIndex = null;
+    this.dbConfigManager = null;
+    this.dbConfig = null;
+    return Promise.resolve();
+  }
+
+  private async initData(): Promise<void> {
+    if (!this.folderPath || !this.root) return;
+
+    this.unsubscribe?.();
+    this.unsubscribe = null;
+    this.folderIndex?.destroy();
+
     const { vault, metadataCache, fileManager } = this.app;
     const useDataview = this.plugin.settings.useDataviewIfAvailable;
     this.folderIndex = useDataview
@@ -62,22 +98,7 @@ export class DatabaseView extends ItemView {
       this.renderTable();
     });
 
-    const container = this.containerEl.children[1];
-    if (!container) return;
-    this.root = createRoot(container as HTMLElement);
     this.renderTable();
-  }
-
-  override onClose(): Promise<void> {
-    this.root?.unmount();
-    this.root = null;
-    this.unsubscribe?.();
-    this.unsubscribe = null;
-    this.folderIndex?.destroy();
-    this.folderIndex = null;
-    this.dbConfigManager = null;
-    this.dbConfig = null;
-    return Promise.resolve();
   }
 
   private renderTable(): void {
@@ -90,6 +111,7 @@ export class DatabaseView extends ItemView {
         rows: this.rows,
         columns,
         engine: this.engine,
+        app: this.app,
         onUpdate: (file, key, value) => this.folderIndex!.updateCell(file, key, value),
       }),
     );

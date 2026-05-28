@@ -8,14 +8,13 @@ import { SettingsTab } from './settings/SettingsTab';
 
 export default class ObsidianDBPlugin extends Plugin {
   settings: PluginSettings = DEFAULT_SETTINGS;
-  private pendingFolderPath = '';
 
   override async onload(): Promise<void> {
     await this.loadSettings();
 
     this.registerView(
       VIEW_TYPE_DATABASE,
-      leaf => new DatabaseView(leaf, this, this.pendingFolderPath),
+      leaf => new DatabaseView(leaf, this),
     );
 
     this.addSettingTab(new SettingsTab(this.app, this));
@@ -44,9 +43,8 @@ export default class ObsidianDBPlugin extends Plugin {
   private async openActiveFolderAsDatabase(): Promise<void> {
     const folder = this.app.workspace.getActiveFile()?.parent;
     if (!folder) return;
-    this.pendingFolderPath = folder.path;
     const leaf = this.app.workspace.getLeaf(true);
-    await leaf.setViewState({ type: VIEW_TYPE_DATABASE, active: true });
+    await leaf.setViewState({ type: VIEW_TYPE_DATABASE, active: true, state: { folderPath: folder.path } });
   }
 
   async loadSettings(): Promise<void> {

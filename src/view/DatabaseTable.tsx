@@ -5,7 +5,7 @@ import {
   flexRender,
   type ColumnDef,
 } from '@tanstack/react-table';
-import type { TFile } from 'obsidian';
+import type { App, TFile } from 'obsidian';
 import type { Row, Column, IFormulaEngine, ColumnResult } from '../types';
 import { CellEditor } from './CellEditor';
 import { FormulaCell } from './FormulaCell';
@@ -35,10 +35,11 @@ interface Props {
   rows: Row[];
   columns: Column[];
   engine: IFormulaEngine;
+  app: App;
   onUpdate: (file: TFile, key: string, value: unknown) => Promise<void>;
 }
 
-export function DatabaseTable({ rows, columns, engine, onUpdate }: Props) {
+export function DatabaseTable({ rows, columns, engine, app, onUpdate }: Props) {
   const [editing, setEditing] = useState<{ rowIdx: number; colKey: string } | null>(null);
 
   const data = buildComputedRows(rows, columns, engine);
@@ -54,12 +55,17 @@ export function DatabaseTable({ rows, columns, engine, onUpdate }: Props) {
       const originalRow = tableRow.original;
 
       if (editing?.rowIdx === rowIdx && editing.colKey === col.key) {
+        const original = originalRow.frontmatter[col.key];
         return (
           <CellEditor
             initial={value}
             onCommit={v => {
               setEditing(null);
-              void onUpdate(originalRow.file, col.key, v);
+              const typed: unknown =
+                typeof original === 'number' && Number.isFinite(Number(v))
+                  ? Number(v)
+                  : v;
+              void onUpdate(originalRow.file, col.key, typed);
             }}
             onCancel={() => setEditing(null)}
           />
@@ -69,7 +75,7 @@ export function DatabaseTable({ rows, columns, engine, onUpdate }: Props) {
       if (col.kind === 'data' && col.type === 'wikilink' && typeof value === 'string') {
         return (
           <span onClick={() => setEditing({ rowIdx, colKey: col.key })}>
-            <WikilinkCell value={value} />
+            <WikilinkCell value={value} app={app} />
           </span>
         );
       }
