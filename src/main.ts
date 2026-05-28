@@ -1,19 +1,37 @@
 import { Plugin } from 'obsidian';
 import type { PluginSettings } from './types';
 import { DEFAULT_SETTINGS } from './types';
-
-// Entry point - implementation added in Phase 1 (FolderIndex) and Phase 3 (DatabaseView)
+import { DatabaseView, VIEW_TYPE_DATABASE } from './view/DatabaseView';
 
 export default class ObsidianDBPlugin extends Plugin {
   settings: PluginSettings = DEFAULT_SETTINGS;
+  private pendingFolderPath = '';
 
   override async onload(): Promise<void> {
     await this.loadSettings();
-    // DatabaseView registration and commands added in Phase 3
+
+    this.registerView(
+      VIEW_TYPE_DATABASE,
+      leaf => new DatabaseView(leaf, this, this.pendingFolderPath),
+    );
+
+    this.addCommand({
+      id: 'open-as-database',
+      name: 'Open folder as database',
+      callback: () => { void this.openActiveFolderAsDatabase(); },
+    });
   }
 
   override onunload(): void {
-    // Cleanup added alongside each registered component
+    this.app.workspace.detachLeavesOfType(VIEW_TYPE_DATABASE);
+  }
+
+  private async openActiveFolderAsDatabase(): Promise<void> {
+    const folder = this.app.workspace.getActiveFile()?.parent;
+    if (!folder) return;
+    this.pendingFolderPath = folder.path;
+    const leaf = this.app.workspace.getLeaf(true);
+    await leaf.setViewState({ type: VIEW_TYPE_DATABASE, active: true });
   }
 
   async loadSettings(): Promise<void> {
