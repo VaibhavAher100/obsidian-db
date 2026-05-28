@@ -71,6 +71,7 @@ export class FrontmatterAdapter implements FolderIndex {
   }
 
   private isInFolder(file: TFile): boolean {
+    if (this.folderPath === '') return true;
     const prefix = this.folderPath.endsWith('/') ? this.folderPath : `${this.folderPath}/`;
     return file.path.startsWith(prefix);
   }

@@ -89,7 +89,7 @@ export class DatabaseView extends ItemView {
   }
 
   private async initData(): Promise<void> {
-    if (!this.folderPath || !this.root) return;
+    if (!this.root) return;
 
     this.unsubscribe?.();
     this.unsubscribe = null;
