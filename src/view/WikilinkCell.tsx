@@ -3,9 +3,10 @@ import type { App } from 'obsidian';
 interface Props {
   value: string;
   app: App;
+  onLinkClick?: () => void;
 }
 
-export function WikilinkCell({ value, app }: Props) {
+export function WikilinkCell({ value, app, onLinkClick }: Props) {
   const match = value.match(/^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]$/);
   if (!match) return <span>{value}</span>;
   const displayText = match[2] ?? match[1] ?? value;
@@ -14,7 +15,11 @@ export function WikilinkCell({ value, app }: Props) {
     <span
       className="internal-link"
       data-link={linkTarget}
-      onClick={() => { void app.workspace.openLinkText(linkTarget, '', false); }}
+      onClick={e => {
+        e.stopPropagation();
+        onLinkClick?.();
+        void app.workspace.openLinkText(linkTarget, '', false);
+      }}
       style={{ cursor: 'pointer' }}
     >
       {displayText}
