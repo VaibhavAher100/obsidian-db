@@ -13,6 +13,19 @@ import { WikilinkCell } from './WikilinkCell';
 
 type TableRow = Row & { _computed: Record<string, unknown> };
 
+function coerceCommit(v: string, original: unknown): unknown {
+  if (typeof original === 'number') {
+    if (v.trim() === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : v;
+  }
+  if (typeof original === 'boolean') {
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+  }
+  return v;
+}
+
 function buildComputedRows(rows: Row[], columns: Column[], engine: IFormulaEngine): TableRow[] {
   const results = new Map<string, ColumnResult>();
   for (const col of columns) {
@@ -61,11 +74,7 @@ export function DatabaseTable({ rows, columns, engine, app, onUpdate }: Props) {
             initial={value}
             onCommit={v => {
               setEditing(null);
-              const typed: unknown =
-                typeof original === 'number' && Number.isFinite(Number(v))
-                  ? Number(v)
-                  : v;
-              void onUpdate(originalRow.file, col.key, typed);
+              void onUpdate(originalRow.file, col.key, coerceCommit(v, original));
             }}
             onCancel={() => setEditing(null)}
           />
@@ -75,7 +84,7 @@ export function DatabaseTable({ rows, columns, engine, app, onUpdate }: Props) {
       if (col.kind === 'data' && col.type === 'wikilink' && typeof value === 'string') {
         return (
           <span onClick={() => setEditing({ rowIdx, colKey: col.key })}>
-            <WikilinkCell value={value} app={app} />
+            <WikilinkCell value={value} app={app} onLinkClick={() => setEditing(null)} />
           </span>
         );
       }
