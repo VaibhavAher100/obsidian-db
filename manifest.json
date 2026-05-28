@@ -1,7 +1,7 @@
 {
   "id": "obsidian-db",
   "name": "ObsidianDB",
-  "version": "0.0.1-dev",
+  "version": "0.1.0",
   "minAppVersion": "1.5.11",
   "description": "Turn any folder into a live database table. Sort, filter, and compute formulas over your notes frontmatter.",
   "author": "Vaibhav Aher",
