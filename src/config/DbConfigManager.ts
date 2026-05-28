@@ -13,7 +13,7 @@ export class DbConfigManager {
     private readonly vault: VaultDep,
     folderPath: string,
   ) {
-    this.configPath = `${folderPath}/.obsidian-db.json`;
+    this.configPath = folderPath ? `${folderPath}/.obsidian-db.json` : '.obsidian-db.json';
   }
 
   async load(): Promise<DbConfig> {
