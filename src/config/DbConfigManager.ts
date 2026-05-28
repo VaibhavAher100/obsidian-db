@@ -6,8 +6,6 @@ import type { DbConfig } from '../types';
 // Keeps tests simple: pass an inline object, no real Obsidian needed.
 export type VaultDep = Pick<DataAdapter, 'read' | 'write'>;
 
-const EMPTY_CONFIG: DbConfig = { formulaColumns: [] };
-
 export class DbConfigManager {
   private readonly configPath: string;
 
@@ -23,18 +21,18 @@ export class DbConfigManager {
     try {
       raw = await this.vault.read(this.configPath);
     } catch {
-      return EMPTY_CONFIG;
+      return { formulaColumns: [] };
     }
 
     let json: unknown;
     try {
       json = JSON.parse(raw) as unknown;
     } catch {
-      return EMPTY_CONFIG;
+      return { formulaColumns: [] };
     }
 
     const result = DbConfigSchema.safeParse(json);
-    return result.success ? result.data : EMPTY_CONFIG;
+    return result.success ? result.data : { formulaColumns: [] };
   }
 
   async save(config: DbConfig): Promise<void> {

@@ -75,7 +75,7 @@ export function DatabaseTable({ rows, columns, engine, onUpdate }: Props) {
       }
 
       if (col.kind === 'formula') {
-        return <FormulaCell value={value} isError={value === '#ERROR'} />;
+        return <FormulaCell value={value} />;
       }
 
       return <span onClick={() => setEditing({ rowIdx, colKey: col.key })}>{String(value ?? '')}</span>;
