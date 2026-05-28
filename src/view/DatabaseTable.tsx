@@ -2,8 +2,10 @@ import { useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   flexRender,
   type ColumnDef,
+  type SortingState,
 } from '@tanstack/react-table';
 import type { App, TFile } from 'obsidian';
 import type { Row, Column, IFormulaEngine, ColumnResult } from '../types';
@@ -54,6 +56,7 @@ interface Props {
 
 export function DatabaseTable({ rows, columns, engine, app, onUpdate }: Props) {
   const [editing, setEditing] = useState<{ rowIdx: number; colKey: string } | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const data = buildComputedRows(rows, columns, engine);
 
@@ -100,7 +103,10 @@ export function DatabaseTable({ rows, columns, engine, app, onUpdate }: Props) {
   const table = useReactTable({
     data,
     columns: colDefs,
+    state: { sorting },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -109,8 +115,13 @@ export function DatabaseTable({ rows, columns, engine, app, onUpdate }: Props) {
         {table.getHeaderGroups().map(headerGroup => (
           <tr key={headerGroup.id}>
             {headerGroup.headers.map(header => (
-              <th key={header.id}>
+              <th
+                key={header.id}
+                onClick={header.column.getToggleSortingHandler()}
+                style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', userSelect: 'none' }}
+              >
                 {flexRender(header.column.columnDef.header, header.getContext())}
+                {header.column.getIsSorted() === 'asc' ? ' ↑' : header.column.getIsSorted() === 'desc' ? ' ↓' : ''}
               </th>
             ))}
           </tr>
