@@ -1,4 +1,4 @@
-import { Modal, type App } from 'obsidian';
+import { Modal, Notice, type App } from 'obsidian';
 import type ObsidianDBPlugin from '../main';
 import { CsvImporter } from './CsvImporter';
 
@@ -34,26 +34,37 @@ export class ImportModal extends Modal {
   }
 
   private async runImport(file: File): Promise<void> {
-    const text = await file.text();
-    const { rows, headers } = new CsvImporter().parse(text);
-    const firstHeader = headers[0] ?? '';
+    try {
+      const text = await file.text();
+      const { rows, headers } = new CsvImporter().parse(text);
+      const firstHeader = headers[0] ?? '';
+      const seen = new Set<string>();
+      let created = 0;
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i]!;
-      const rawName = firstHeader && row[firstHeader]
-        ? row[firstHeader]!.replace(/\s+/g, '-').toLowerCase()
-        : `row-${i}`;
-      const fileName = `${rawName}.md`;
-      const filePath = this.folderPath ? `${this.folderPath}/${fileName}` : fileName;
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i]!;
+        let slug = firstHeader && row[firstHeader]
+          ? row[firstHeader]!.replace(/\s+/g, '-').toLowerCase()
+          : `row-${i}`;
+        if (seen.has(slug)) {
+          slug = `${slug}-${i}`;
+        }
+        seen.add(slug);
 
-      const frontmatterLines = Object.entries(row)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join('\n');
-      const content = `---\n${frontmatterLines}\n---\n`;
+        const fileName = `${slug}.md`;
+        const filePath = this.folderPath ? `${this.folderPath}/${fileName}` : fileName;
 
-      await this.app.vault.create(filePath, content);
+        const frontmatterLines = headers.map(h => `${h}: ${row[h] ?? ''}`).join('\n');
+        const content = `---\n${frontmatterLines}\n---\n`;
+
+        await this.app.vault.create(filePath, content);
+        created++;
+      }
+
+      new Notice(`Imported ${created} row${created !== 1 ? 's' : ''}`);
+      this.close();
+    } catch (err) {
+      new Notice(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
     }
-
-    this.close();
   }
 }
