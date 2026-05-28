@@ -66,13 +66,13 @@ All tests must be GREEN and typecheck must pass before any commit.
 |-------|--------|-------------|
 | 0 — Repo setup | DONE | CONTEXT.md, ADRs, types, schemas, config files |
 | 1 — FolderIndex TDD | DONE | FrontmatterAdapter (10 tests GREEN) + DataviewAdapter stub |
-| 2 — FormulaEngine TDD | pending | =SUM, =COUNT, =AVG, =IF (per-row + aggregate), ColumnResult |
-| 3 — Table View | pending | DatabaseView, DatabaseTable, CellEditor, WikilinkCell |
-| 4 — Formula Columns | pending | parseFormula, FormulaCell, persist to .obsidian-db.json |
-| 5 — CSV Import | pending | CsvImporter TDD, ImportModal |
-| 6 — Settings + Release | pending | DataviewAdapter full impl, SettingsTab, README, BRAT |
+| 2 — FormulaEngine TDD | DONE | =SUM, =COUNT, =AVG, =IF (per-row + aggregate), ColumnResult |
+| 3 — Table View | DONE | DatabaseView, DatabaseTable, CellEditor, WikilinkCell |
+| 4 — Formula Columns | DONE | parseFormula, FormulaCell, persist to .obsidian-db.json |
+| 5 — CSV Import | DONE | CsvImporter TDD, ImportModal |
+| 6 — Settings + Release | DONE | DataviewAdapter full impl, SettingsTab, v0.1.0 released via BRAT |
 
-Start Phase 2 unless the user says otherwise.
+v0.1.0 is complete. Next work tracked via GitHub issues.
 
 ---
 

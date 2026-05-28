@@ -30,10 +30,18 @@ Coming once Obsidian plugin review completes.
 ## Usage
 
 1. Open the command palette (`Ctrl+P` / `Cmd+P`)
-2. Run **ObsidianDB: Open folder as database**
-3. Select the folder you want to view as a table
+2. Navigate to any note inside the folder you want to view
+3. Run **ObsidianDB: Open folder as database** - it opens the active file's parent folder
 
 Folders with an `.obsidian-db.json` file will remember your formula columns and column order.
+
+## Settings
+
+Open **Settings > Community Plugins > ObsidianDB** to configure:
+
+- **Use Dataview if available** (default: on) - when the Dataview plugin is installed, ObsidianDB
+  uses it as the index backend for faster updates on large folders. Disable to always use the
+  built-in FrontmatterAdapter.
 
 ## Data safety
 
