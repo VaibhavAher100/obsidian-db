@@ -14,9 +14,10 @@ interface CacheDep {
 }
 
 type Handler = (...args: unknown[]) => void;
+type Registration = { event: string; handler: Handler };
 
 export class FrontmatterAdapter implements FolderIndex {
-  private handlers: Handler[] = [];
+  private handlers: Registration[] = [];
 
   constructor(
     private vault: VaultDep,
@@ -41,19 +42,30 @@ export class FrontmatterAdapter implements FolderIndex {
   }
 
   onRowChange(cb: (rows: Row[]) => void): Unsubscribe {
-    const handler: Handler = (...args: unknown[]) => {
+    // 'changed' covers edits and newly-indexed files; filter to this folder.
+    const onChanged: Handler = (...args: unknown[]) => {
       const file = args[0] as TFile;
       if (this.isInFolder(file)) {
         cb(this.getRows());
       }
     };
+    // 'deleted' has no surviving file to test against — just recompute the rows.
+    const onDeleted: Handler = () => cb(this.getRows());
 
-    this.cache.on('changed', handler);
-    this.handlers.push(handler);
+    const regs: Registration[] = [
+      { event: 'changed', handler: onChanged },
+      { event: 'deleted', handler: onDeleted },
+    ];
+    for (const reg of regs) {
+      this.cache.on(reg.event, reg.handler);
+      this.handlers.push(reg);
+    }
 
     return () => {
-      this.cache.off('changed', handler);
-      this.handlers = this.handlers.filter(h => h !== handler);
+      for (const reg of regs) {
+        this.cache.off(reg.event, reg.handler);
+      }
+      this.handlers = this.handlers.filter(h => !regs.includes(h));
     };
   }
 
@@ -64,8 +76,8 @@ export class FrontmatterAdapter implements FolderIndex {
   }
 
   destroy(): void {
-    for (const handler of this.handlers) {
-      this.cache.off('changed', handler);
+    for (const { event, handler } of this.handlers) {
+      this.cache.off(event, handler);
     }
     this.handlers = [];
   }

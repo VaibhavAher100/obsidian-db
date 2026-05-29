@@ -129,6 +129,21 @@ describe('FrontmatterAdapter', () => {
     expect(cb).not.toHaveBeenCalled();
   });
 
+  it('onRowChange fires on a deleted event so the table drops removed files', () => {
+    const file = makeFile('notes/a.md');
+    const vault = createMockVault([file]);
+    const { cache, trigger } = createMockMetadataCache({ 'notes/a.md': { x: 1 } });
+    const { mock: fm } = createMockFileManager();
+
+    const adapter = new FrontmatterAdapter(vault, cache, fm, 'notes/');
+    const cb = vi.fn();
+    adapter.onRowChange(cb);
+
+    trigger('deleted', file);
+
+    expect(cb).toHaveBeenCalledOnce();
+  });
+
   // ── updateCell ───────────────────────────────────────────────────────────
 
   it('updateCell calls processFrontMatter with the new key/value', async () => {

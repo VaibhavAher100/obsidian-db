@@ -37,13 +37,14 @@ export class ImportModal extends Modal {
     return raw
       .replace(/[/\\]/g, '-')
       .replace(/\.\./g, '-')
-      .replace(/[^\w\s-]/g, '')
+      .replace(/[^\p{L}\p{N}_\s-]/gu, '') // keep unicode letters/digits (e.g. "Müller")
       .replace(/\s+/g, '-')
       .toLowerCase()
       .replace(/^-+|-+$/g, '') || 'row';
   }
 
   private async runImport(file: File): Promise<void> {
+    let created = 0;
     try {
       const text = await file.text();
       const { rows, headers } = new CsvImporter().parse(text);
@@ -72,7 +73,6 @@ export class ImportModal extends Modal {
       }
 
       // All paths clear — create files and populate frontmatter safely
-      let created = 0;
       for (const { row, filePath } of plan) {
         const noteFile = await this.app.vault.create(filePath, '');
         await this.app.fileManager.processFrontMatter(noteFile, fm => {
@@ -86,7 +86,12 @@ export class ImportModal extends Modal {
       new Notice(`Imported ${created} row${created !== 1 ? 's' : ''}`);
       this.close();
     } catch (err) {
-      new Notice(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      new Notice(
+        created > 0
+          ? `Import failed after creating ${created} file(s): ${msg}`
+          : `Import failed: ${msg}`,
+      );
     }
   }
 }
