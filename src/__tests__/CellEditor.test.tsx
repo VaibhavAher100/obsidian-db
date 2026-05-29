@@ -37,4 +37,14 @@ describe('CellEditor', () => {
     render(<CellEditor initial={42} onCommit={vi.fn()} onCancel={vi.fn()} />);
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('42');
   });
+
+  it('commits only once when Enter is followed by blur', () => {
+    const onCommit = vi.fn();
+    render(<CellEditor initial="" onCommit={onCommit} onCancel={vi.fn()} />);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'x' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.blur(input);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+  });
 });
