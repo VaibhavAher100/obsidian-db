@@ -63,4 +63,34 @@ describe('FormulaEngine', () => {
   it('invalid formula returns aggregate #ERROR without throwing', () => {
     expect(engine.evaluate('not a formula', [])).toEqual({ kind: 'aggregate', value: '#ERROR' });
   });
+
+  // Numeric coercion: CSV-imported and YAML frontmatter values are often strings.
+
+  it('=SUM(price) coerces numeric strings', () => {
+    const rows = [row({ price: '1' }), row({ price: '2' }), row({ price: 3 })];
+    expect(engine.evaluate('=SUM(price)', rows)).toEqual({ kind: 'aggregate', value: 6 });
+  });
+
+  it('=SUM(price) ignores empty and non-numeric strings', () => {
+    const rows = [row({ price: '' }), row({ price: 'abc' }), row({ price: '4' })];
+    expect(engine.evaluate('=SUM(price)', rows)).toEqual({ kind: 'aggregate', value: 4 });
+  });
+
+  it('=AVG(rating) coerces numeric strings', () => {
+    const rows = [row({ rating: '4' }), row({ rating: '5' }), row({ rating: 3 })];
+    expect(engine.evaluate('=AVG(rating)', rows)).toEqual({ kind: 'aggregate', value: 4 });
+  });
+
+  it('=IF(score>80,...) coerces numeric string values', () => {
+    const rows = [row({ score: '85' }), row({ score: '72' })];
+    expect(engine.evaluate('=IF(score>80,"pass","fail")', rows)).toEqual({
+      kind: 'per-row',
+      values: ['pass', 'fail'],
+    });
+  });
+
+  it('=COUNT(price="5") matches across number and string types', () => {
+    const rows = [row({ price: 5 }), row({ price: '5' }), row({ price: 10 })];
+    expect(engine.evaluate('=COUNT(price="5")', rows)).toEqual({ kind: 'aggregate', value: 2 });
+  });
 });
