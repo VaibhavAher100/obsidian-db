@@ -3,6 +3,13 @@
 All notable changes to ObsidianDB are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.1](https://github.com/VaibhavAher100/obsidian-db/compare/v0.2.0...v0.2.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* **view:** surface cell-edit write failures via Notice ([1ab3969](https://github.com/VaibhavAher100/obsidian-db/commit/1ab3969420db79710e1a2785d796271dfa7c64b3))
+
 ## [0.2.0](https://github.com/VaibhavAher100/obsidian-db/compare/obsidian-db-v0.1.0...obsidian-db-v0.2.0) (2026-05-29)
 
 
