@@ -1,5 +1,5 @@
 import React from 'react';
-import { ItemView, type WorkspaceLeaf, type ViewStateResult } from 'obsidian';
+import { ItemView, Notice, type WorkspaceLeaf, type ViewStateResult } from 'obsidian';
 import { createRoot, type Root } from 'react-dom/client';
 import type ObsidianDBPlugin from '../main';
 import { DbConfigManager } from '../config/DbConfigManager';
@@ -124,7 +124,10 @@ export class DatabaseView extends ItemView {
         columns,
         engine: this.engine,
         app: this.app,
-        onUpdate: (file, key, value) => this.folderIndex!.updateCell(file, key, value),
+        onUpdate: (file, key, value) =>
+          this.folderIndex!.updateCell(file, key, value).catch(e => {
+            new Notice(`Save failed: ${e instanceof Error ? e.message : String(e)}`);
+          }),
       }),
     );
   }
