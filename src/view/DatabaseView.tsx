@@ -6,20 +6,11 @@ import { DbConfigManager } from '../config/DbConfigManager';
 import { DataviewAdapter } from '../indexer/DataviewAdapter';
 import { FrontmatterAdapter } from '../indexer/FrontmatterAdapter';
 import { FormulaEngine } from '../formula/FormulaEngine';
-import type { Row, Unsubscribe, DataColumn, DbConfig, FolderIndex } from '../types';
+import type { Row, Unsubscribe, DbConfig, FolderIndex } from '../types';
 import { DatabaseTable } from './DatabaseTable';
+import { deriveColumns } from './deriveColumns';
 
 export const VIEW_TYPE_DATABASE = 'obsidian-db-view';
-
-function deriveColumns(rows: Row[]): DataColumn[] {
-  const keys = new Set<string>();
-  for (const row of rows) {
-    for (const key of Object.keys(row.frontmatter)) {
-      keys.add(key);
-    }
-  }
-  return [...keys].map(key => ({ kind: 'data', key, label: key, type: 'text' }));
-}
 
 export class DatabaseView extends ItemView {
   private root: Root | null = null;

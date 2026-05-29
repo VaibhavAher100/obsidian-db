@@ -14,7 +14,10 @@ export function WikilinkCell({ value, app }: Props) {
     <span
       className="internal-link"
       data-link={linkTarget}
-      onClick={() => { void app.workspace.openLinkText(linkTarget, '', false); }}
+      onClick={e => {
+        e.stopPropagation(); // open the link without also entering cell-edit mode
+        void app.workspace.openLinkText(linkTarget, '', false);
+      }}
       style={{ cursor: 'pointer' }}
     >
       {displayText}
