@@ -14,14 +14,12 @@
   "author": "Vaibhav Aher",
   "license": "MIT",
   "dependencies": {
-    "@formulajs/formulajs": "^4.2.0",
     "@tanstack/react-table": "^8.20.0",
     "@total-typescript/ts-reset": "^0.6.1",
     "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zod": "^3.24.0",
-    "zustand": "^5.0.3"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
