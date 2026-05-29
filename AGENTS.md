@@ -11,8 +11,8 @@ ObsidianDB turns any folder of `.md` files into a live, sortable, filterable tab
 based on YAML frontmatter. It is an Obsidian plugin — the successor to DB Folder
 (archived July 2025, 80k downloads).
 
-Stack: TypeScript strict + esbuild + React 18 + TanStack React Table v8 + Zustand
-+ @formulajs/formulajs + zod + papaparse + vitest
+Stack: TypeScript strict + esbuild + React 18 + TanStack React Table v8
++ zod + papaparse + vitest
 
 ---
 
@@ -194,8 +194,8 @@ reader must hold at once.
 - Design interfaces around what callers need to know, not how the implementation works.
   Avoid fragile staging, setup sequences, mode flags, and arguments that expose internal choices.
 - Hide volatile decisions inside the module that owns the knowledge. Adapters hide whether
-  MetadataCache or Dataview is in use. FormulaEngine hides whether formulajs or custom
-  logic runs the computation.
+  MetadataCache or Dataview is in use. FormulaEngine hides how a formula is parsed and
+  evaluated behind a single evaluate() call.
 - Pull complexity downward. Prefer a slightly more complex implementation if it gives callers
   a simpler public contract.
 - Treat names, consistency, and obviousness as design information. When naming is hard or
