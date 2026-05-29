@@ -35,6 +35,17 @@ describe('FrontmatterAdapter', () => {
     expect(rows[0]!.frontmatter).toEqual({ title: 'Alpha', rating: 5 });
   });
 
+  it('getRows returns all files when folderPath is the vault root', () => {
+    const a = makeFile('a.md');
+    const b = makeFile('notes/b.md');
+    const vault = createMockVault([a, b]);
+    const { cache } = createMockMetadataCache({ 'a.md': { x: 1 }, 'notes/b.md': { x: 2 } });
+    const { mock: fm } = createMockFileManager();
+
+    const adapter = new FrontmatterAdapter(vault, cache, fm, '');
+    expect(adapter.getRows()).toHaveLength(2);
+  });
+
   it('getRows ignores .md files outside the target folder', () => {
     const inside = makeFile('notes/a.md');
     const outside = makeFile('archive/b.md');
@@ -127,6 +138,21 @@ describe('FrontmatterAdapter', () => {
     trigger('changed', file);
 
     expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('onRowChange fires on a deleted event so the table drops removed files', () => {
+    const file = makeFile('notes/a.md');
+    const vault = createMockVault([file]);
+    const { cache, trigger } = createMockMetadataCache({ 'notes/a.md': { x: 1 } });
+    const { mock: fm } = createMockFileManager();
+
+    const adapter = new FrontmatterAdapter(vault, cache, fm, 'notes/');
+    const cb = vi.fn();
+    adapter.onRowChange(cb);
+
+    trigger('deleted', file);
+
+    expect(cb).toHaveBeenCalledOnce();
   });
 
   // ── updateCell ───────────────────────────────────────────────────────────
