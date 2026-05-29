@@ -65,14 +65,15 @@ All tests must be GREEN and typecheck must pass before any commit.
 | Phase | Status | Description |
 |-------|--------|-------------|
 | 0 — Repo setup | DONE | CONTEXT.md, ADRs, types, schemas, config files |
-| 1 — FolderIndex TDD | DONE | FrontmatterAdapter (10 tests GREEN) + DataviewAdapter stub |
-| 2 — FormulaEngine TDD | pending | =SUM, =COUNT, =AVG, =IF (per-row + aggregate), ColumnResult |
-| 3 — Table View | pending | DatabaseView, DatabaseTable, CellEditor, WikilinkCell |
-| 4 — Formula Columns | pending | parseFormula, FormulaCell, persist to .obsidian-db.json |
-| 5 — CSV Import | pending | CsvImporter TDD, ImportModal |
-| 6 — Settings + Release | pending | DataviewAdapter full impl, SettingsTab, README, BRAT |
+| 1 — FolderIndex TDD | DONE | FrontmatterAdapter + DataviewAdapter stub |
+| 2 — FormulaEngine TDD | DONE | =SUM, =COUNT, =AVG, =IF (per-row + aggregate), ColumnResult |
+| 3 — Table View | DONE | DatabaseView, DatabaseTable, CellEditor, WikilinkCell |
+| 4 — Formula Columns | DONE | parseFormula, FormulaCell, persist to .obsidian-db.json |
+| 5 — CSV Import | DONE | CsvImporter, ImportModal |
+| 6 — Settings + Release | DONE | DataviewAdapter, SettingsTab, README, BRAT — v0.1.0 shipped |
 
-Start Phase 2 unless the user says otherwise.
+All six phases are merged and v0.1.0 is released. New work is post-v0.1
+maintenance: confirm with the user which feature or fix to pick up next.
 
 ---
 
